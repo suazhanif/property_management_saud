@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Property form > Assets tab: purchase date / value / responsible -->
+    <record id="property_details_form_asset_custody_inherit" model="ir.ui.view">
+        <field name="name">property.details.form.asset.custody.inherit</field>
+        <field name="model">property.details</field>
+        <field name="inherit_id" ref="rental_management.property_details_form_asset_inherit"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='asset_ids']/list/field[@name='condition']" position="after">
+                <field name="purchase_date" optional="show"/>
+                <field name="responsible_ids" widget="many2many_tags" optional="show"/>
+                <field name="responsible_since" optional="hide"/>
+            </xpath>
+            <xpath expr="//field[@name='asset_ids']/list/field[@name='value']" position="attributes">
+                <attribute name="string">Purchase Value</attribute>
+                <attribute name="optional">show</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Asset form: Responsible + Custody History -->
+    <record id="property_unit_asset_view_form_custody" model="ir.ui.view">
+        <field name="name">property.unit.asset.form.custody</field>
+        <field name="model">property.unit.asset</field>
+        <field name="inherit_id" ref="rental_management.property_unit_asset_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='value']" position="attributes">
+                <attribute name="string">Purchase Value</attribute>
+            </xpath>
+            <xpath expr="//sheet" position="inside">
+                <group string="Currently Responsible">
+                    <field name="responsible_ids" widget="many2many_tags" readonly="1"/>
+                    <field name="responsible_since" readonly="1"/>
+                </group>
+                <separator string="Custody History"/>
+                <field name="custody_ids" context="{'default_asset_id': id}">
+                    <list editable="bottom" decoration-muted="not is_current"
+                          decoration-bf="is_current">
+                        <field name="is_current" column_invisible="1"/>
+                        <field name="partner_id"/>
+                        <field name="employee_id" optional="show"/>
+                        <field name="occupy_id" optional="show" readonly="1"/>
+                        <field name="tenancy_id" optional="hide" readonly="1"/>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="condition_in" optional="show"/>
+                        <field name="condition_out" optional="show"/>
+                        <field name="note" optional="hide"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Unit Assets list -->
+    <record id="property_unit_asset_view_list_custody" model="ir.ui.view">
+        <field name="name">property.unit.asset.list.custody</field>
+        <field name="model">property.unit.asset</field>
+        <field name="inherit_id" ref="rental_management.property_unit_asset_view_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='condition']" position="after">
+                <field name="purchase_date" optional="show"/>
+                <field name="responsible_ids" widget="many2many_tags" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Open custody for units that are occupied today (runs on each upgrade, idempotent) -->
+    <function model="property.details" name="_backfill_asset_custody"/>
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Global rules: apply to every user, but only filter when the user has a
+        Property Type Access set. They are AND-ed with the officer assignment
+        rules, so an officer still sees only their assigned records.
+    -->
+    <data noupdate="1">
+        <record id="rule_property_project_access_type" model="ir.rule">
+            <field name="name">Property Type Access: Compound</field>
+            <field name="model_id" ref="rental_management.model_property_project"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('project_for', '=', user.property_access_type)] if user.property_access_type else [(1, '=', 1)]</field>
+        </record>
+
+        <record id="rule_property_sub_project_access_type" model="ir.rule">
+            <field name="name">Property Type Access: Building</field>
+            <field name="model_id" ref="rental_management.model_property_sub_project"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('project_for', '=', user.property_access_type)] if user.property_access_type else [(1, '=', 1)]</field>
+        </record>
+
+        <record id="rule_property_details_access_type" model="ir.rule">
+            <field name="name">Property Type Access: Property</field>
+            <field name="model_id" ref="rental_management.model_property_details"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('sale_lease', '=', {'rent': 'for_tenancy', 'sale': 'for_sale'}.get(user.property_access_type, user.property_access_type))] if user.property_access_type else [(1, '=', 1)]</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="property_asset_report_wizard_form_view" model="ir.ui.view">
+        <field name="name">property.asset.report.wizard.form.view</field>
+        <field name="model">property.asset.report.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <div class="oe_title mb24">
+                    <h1>Asset Report</h1>
+                </div>
+                <group string="Location">
+                    <group>
+                        <field name="property_project_id" options="{'no_create': True}"/>
+                        <field name="subproject_id" options="{'no_create': True}"/>
+                        <field name="floor" placeholder="0 = all floors"/>
+                    </group>
+                    <group>
+                        <field name="include_empty"/>
+                        <field name="pdf_layout" widget="radio"/>
+                    </group>
+                </group>
+                <group string="Specific Properties (optional)">
+                    <field name="property_ids" nolabel="1" colspan="2"
+                           widget="many2many_tags"
+                           options="{'no_create': True}"
+                           placeholder="Leave empty for all properties of the selected compound / building"
+                           domain="[('property_project_id', '=?', property_project_id), ('subproject_id', '=?', subproject_id)]"/>
+                </group>
+                <group string="Asset Filters">
+                    <group>
+                        <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    </group>
+                    <group>
+                        <field name="condition"/>
+                    </group>
+                </group>
+                <footer>
+                    <button string="Print PDF" type="object" name="action_print_pdf"
+                            class="btn btn-primary" icon="fa-file-pdf-o"/>
+                    <button string="Export Excel" type="object" name="action_export_xlsx"
+                            class="btn btn-primary" icon="fa-file-excel-o"/>
+                    <button string="Cancel" special="cancel" class="btn btn-outline-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="property_asset_report_wizard_action" model="ir.actions.act_window">
+        <field name="name">Asset Report</field>
+        <field name="res_model">property.asset.report.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem name="Asset Report"
+              id="menu_property_asset_report"
+              parent="rental_management.menu_print_report"
+              action="property_asset_report_wizard_action"
+              groups="rental_management.property_rental_manager,rental_management.property_rental_officer"
+              sequence="8"/>
+</odoo>

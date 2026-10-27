@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== Forms ===================== -->
+    <record id="property_project_form_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.project.form.decommission.inherit</field>
+        <field name="model">property.project</field>
+        <field name="inherit_id" ref="rental_management.property_project_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="active" invisible="1"/>
+                <button name="action_open_decommission_wizard" type="object"
+                        string="Decommission" icon="fa-archive" class="btn btn-secondary"
+                        invisible="not active or not id"
+                        groups="rental_management.property_rental_manager"/>
+                <button name="action_restore_decommissioned" type="object"
+                        string="Restore" icon="fa-undo" class="btn btn-primary"
+                        invisible="active"
+                        groups="rental_management.property_rental_manager"
+                        confirm="Restore this compound? Items archived together with it will be restored too."/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="before">
+                <widget name="web_ribbon" title="Decommissioned" bg_color="text-bg-danger"
+                        invisible="active"/>
+                <div class="alert alert-secondary mb-2" role="alert" invisible="active">
+                    <strong>Decommissioned</strong>
+                    on <field name="decommission_date" readonly="1" class="oe_inline"/>
+                    by <field name="decommissioned_by_id" readonly="1" class="oe_inline"
+                              options="{'no_open': True}"/>
+                    <span invisible="not archived_with_parent"> (together with its parent)</span>
+                    <field name="archived_with_parent" invisible="1"/>
+                    <div invisible="not decommission_reason">
+                        Reason: <field name="decommission_reason" readonly="1"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+    <record id="property_sub_project_form_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.sub.project.form.decommission.inherit</field>
+        <field name="model">property.sub.project</field>
+        <field name="inherit_id" ref="rental_management.property_sub_project_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="active" invisible="1"/>
+                <button name="action_open_decommission_wizard" type="object"
+                        string="Decommission" icon="fa-archive" class="btn btn-secondary"
+                        invisible="not active or not id"
+                        groups="rental_management.property_rental_manager"/>
+                <button name="action_restore_decommissioned" type="object"
+                        string="Restore" icon="fa-undo" class="btn btn-primary"
+                        invisible="active"
+                        groups="rental_management.property_rental_manager"
+                        confirm="Restore this building? Items archived together with it will be restored too."/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="before">
+                <widget name="web_ribbon" title="Decommissioned" bg_color="text-bg-danger"
+                        invisible="active"/>
+                <div class="alert alert-secondary mb-2" role="alert" invisible="active">
+                    <strong>Decommissioned</strong>
+                    on <field name="decommission_date" readonly="1" class="oe_inline"/>
+                    by <field name="decommissioned_by_id" readonly="1" class="oe_inline"
+                              options="{'no_open': True}"/>
+                    <span invisible="not archived_with_parent"> (together with its parent)</span>
+                    <field name="archived_with_parent" invisible="1"/>
+                    <div invisible="not decommission_reason">
+                        Reason: <field name="decommission_reason" readonly="1"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+    <record id="property_details_form_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.details.form.decommission.inherit</field>
+        <field name="model">property.details</field>
+        <field name="inherit_id" ref="rental_management.property_details_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="active" invisible="1"/>
+                <button name="action_open_decommission_wizard" type="object"
+                        string="Decommission" icon="fa-archive" class="btn btn-secondary"
+                        invisible="not active or not id"
+                        groups="rental_management.property_rental_manager"/>
+                <button name="action_restore_decommissioned" type="object"
+                        string="Restore" icon="fa-undo" class="btn btn-primary"
+                        invisible="active"
+                        groups="rental_management.property_rental_manager"
+                        confirm="Restore this property?"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="before">
+                <widget name="web_ribbon" title="Decommissioned" bg_color="text-bg-danger"
+                        invisible="active"/>
+                <div class="alert alert-secondary mb-2" role="alert" invisible="active">
+                    <strong>Decommissioned</strong>
+                    on <field name="decommission_date" readonly="1" class="oe_inline"/>
+                    by <field name="decommissioned_by_id" readonly="1" class="oe_inline"
+                              options="{'no_open': True}"/>
+                    <span invisible="not archived_with_parent"> (together with its building / compound)</span>
+                    <field name="archived_with_parent" invisible="1"/>
+                    <div invisible="not decommission_reason">
+                        Reason: <field name="decommission_reason" readonly="1"/>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================== Search filters ===================== -->
+    <record id="property_project_search_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.project.search.decommission.inherit</field>
+        <field name="model">property.project</field>
+        <field name="inherit_id" ref="rental_management.property_project_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Decommissioned" name="decommissioned"
+                        domain="[('active', '=', False)]"/>
+                <filter string="All (incl. Decommissioned)" name="all_records"
+                        domain="['|', ('active', '=', True), ('active', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="property_sub_project_search_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.sub.project.search.decommission.inherit</field>
+        <field name="model">property.sub.project</field>
+        <field name="inherit_id" ref="rental_management.property_sub_project_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Decommissioned" name="decommissioned"
+                        domain="[('active', '=', False)]"/>
+                <filter string="All (incl. Decommissioned)" name="all_records"
+                        domain="['|', ('active', '=', True), ('active', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="property_details_search_decommission_inherit" model="ir.ui.view">
+        <field name="name">property.details.search.decommission.inherit</field>
+        <field name="model">property.details</field>
+        <field name="inherit_id" ref="rental_management.property_details_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Decommissioned" name="decommissioned"
+                        domain="[('active', '=', False)]"/>
+                <filter string="All (incl. Decommissioned)" name="all_records"
+                        domain="['|', ('active', '=', True), ('active', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================== Wizard ===================== -->
+    <record id="property_decommission_wizard_form" model="ir.ui.view">
+        <field name="name">property.decommission.wizard.form</field>
+        <field name="model">property.decommission.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Decommission">
+                <field name="res_model" invisible="1" force_save="1"/>
+                <field name="res_id" invisible="1" force_save="1"/>
+                <field name="has_blockers" invisible="1"/>
+                <div class="alert alert-danger" role="alert" invisible="not has_blockers">
+                    <strong>Cannot decommission yet.</strong>
+                    Close / vacate the following first:
+                    <field name="blocker_text" readonly="1" class="d-block mt-2"/>
+                </div>
+                <div class="alert alert-warning" role="alert" invisible="has_blockers">
+                    <field name="record_name" readonly="1" class="fw-bold"/> will be archived
+                    <span invisible="res_model == 'property.details'">
+                        together with
+                        <span invisible="res_model != 'property.project'">
+                            <field name="building_count" readonly="1" class="oe_inline"/> building(s) and
+                        </span>
+                        <field name="unit_count" readonly="1" class="oe_inline"/> unit(s)
+                    </span>.
+                    Archived records are hidden from lists, selections and reports but all history
+                    (contracts, invoices, readings) is kept, and they can be restored at any time.
+                </div>
+                <group>
+                    <group>
+                        <field name="decommission_date"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="reason" placeholder="e.g. Lease with landlord ended / building handed back"/>
+                </group>
+                <footer>
+                    <button string="Decommission" name="action_confirm" type="object"
+                            class="btn-danger" invisible="has_blockers"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

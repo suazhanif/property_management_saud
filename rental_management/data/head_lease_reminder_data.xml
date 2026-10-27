@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Recipients are passed at send time (email_values['recipient_ids'])
+             by property.project.action_send_head_lease_reminder. -->
+        <record id="head_lease_expiry_reminder_template" model="mail.template">
+            <field name="name">Compound: Head Lease Expiry Reminder</field>
+            <field name="model_id" ref="rental_management.model_property_project"/>
+            <field name="subject">Head Lease Expiring - {{ object.name }} ({{ object.head_lease_days_left }} days left)</field>
+            <field name="email_from">{{ (object.company_id.email or user.email) }}</field>
+            <field name="partner_to" eval="False"/>
+            <field name="body_html" type="html">
+                <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+                    <h3 style="color:#d9534f;">Head Lease Expiry Reminder</h3>
+                    <p>Hello,</p>
+                    <p>
+                        The head lease for compound
+                        <strong><t t-out="object.name"/></strong>
+                        (<t t-out="object.project_sequence"/>) ends on
+                        <strong><t t-out="format_date(object.head_lease_end_date)"/></strong>
+                        &#8212; <strong><t t-out="object.head_lease_days_left"/> day(s)</strong> from today.
+                    </p>
+                    <table style="width:100%; border-collapse:collapse; margin:12px 0;">
+                        <tr>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6; width:35%;"><strong>Lessor</strong></td>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><t t-out="object.head_lease_lessor_id.name or '-'"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><strong>Lease Contract Ref.</strong></td>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><t t-out="object.head_lease_ref or '-'"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><strong>Lease Period</strong></td>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;">
+                                <t t-out="format_date(object.head_lease_start_date) if object.head_lease_start_date else '-'"/>
+                                to <t t-out="format_date(object.head_lease_end_date)"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><strong>Buildings</strong></td>
+                            <td style="padding:6px; border-bottom:1px solid #dee2e6;"><t t-out="object.total_subproject"/></td>
+                        </tr>
+                    </table>
+                    <p>
+                        Please review the lease and start the renewal or exit process
+                        (and any impact on the running rent contracts) before the end date.
+                    </p>
+                    <p>
+                        <a t-attf-href="{{ object.get_base_url() }}/odoo/action-rental_management.action_property_project/{{ object.id }}"
+                           style="background:#714B67;color:#fff;padding:8px 14px;border-radius:4px;text-decoration:none;">
+                            Open Compound
+                        </a>
+                    </p>
+                    <p>Best regards,<br/><strong><t t-out="object.company_id.name"/></strong></p>
+                </div>
+            </field>
+            <field name="auto_delete" eval="False"/>
+        </record>
+    </data>
+
+    <data noupdate="1">
+        <record id="ir_cron_head_lease_expiry_reminder" model="ir.cron">
+            <field name="name">Rental Management: Compound Head Lease Expiry Reminder</field>
+            <field name="model_id" ref="rental_management.model_property_project"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_head_lease_expiry_reminder()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>

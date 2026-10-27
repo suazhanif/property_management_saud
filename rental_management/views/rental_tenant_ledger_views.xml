@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== Ledger: list ===================== -->
+    <record id="rental_tenant_ledger_view_list" model="ir.ui.view">
+        <field name="name">rental.tenant.ledger.list</field>
+        <field name="model">rental.tenant.ledger</field>
+        <field name="arch" type="xml">
+            <list string="Tenant / Unit Ledger" create="0" edit="0" delete="0"
+                  decoration-muted="matching == 'M'"
+                  decoration-info="kind == 'unallocated'">
+                <field name="currency_id" column_invisible="1"/>
+                <field name="date"/>
+                <field name="partner_id"/>
+                <field name="property_project_id" optional="hide"/>
+                <field name="subproject_id" optional="show"/>
+                <field name="property_id" optional="show"/>
+                <field name="unit_no" optional="hide"/>
+                <field name="tenancy_id" optional="show"/>
+                <field name="kind" widget="badge"
+                       decoration-primary="kind == 'invoice'"
+                       decoration-warning="kind == 'credit_note'"
+                       decoration-success="kind == 'allocation'"
+                       decoration-info="kind == 'unallocated'"/>
+                <field name="ref"/>
+                <field name="applied_move_id" optional="show"/>
+                <field name="label" optional="hide"/>
+                <field name="date_maturity" optional="hide"/>
+                <field name="debit" sum="Total"/>
+                <field name="credit" sum="Total"/>
+                <field name="balance" sum="Total" optional="show"/>
+                <field name="amount_residual" sum="Total" optional="show"/>
+                <field name="unit_balance" optional="hide"/>
+                <field name="tenant_balance" optional="hide"/>
+                <field name="matching" string="M"/>
+                <button name="action_open_document" type="object" icon="fa-external-link"
+                        title="Open Document"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="rental_tenant_ledger_view_pivot" model="ir.ui.view">
+        <field name="name">rental.tenant.ledger.pivot</field>
+        <field name="model">rental.tenant.ledger</field>
+        <field name="arch" type="xml">
+            <pivot string="Tenant / Unit Ledger" sample="1">
+                <field name="partner_id" type="row"/>
+                <field name="property_id" type="row"/>
+                <field name="debit" type="measure"/>
+                <field name="credit" type="measure"/>
+                <field name="balance" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="rental_tenant_ledger_view_search" model="ir.ui.view">
+        <field name="name">rental.tenant.ledger.search</field>
+        <field name="model">rental.tenant.ledger</field>
+        <field name="arch" type="xml">
+            <search string="Tenant / Unit Ledger">
+                <field name="partner_id"/>
+                <field name="property_id"/>
+                <field name="subproject_id"/>
+                <field name="property_project_id"/>
+                <field name="tenancy_id"/>
+                <field name="ref"/>
+                <filter string="Outstanding (open only)" name="open_only" domain="[('is_open', '=', True)]"/>
+                <filter string="Matched (M)" name="matched" domain="[('matching', '=', 'M')]"/>
+                <filter string="Partially Matched (P)" name="partial" domain="[('matching', '=', 'P')]"/>
+                <separator/>
+                <filter string="Invoices" name="invoices" domain="[('kind', '=', 'invoice')]"/>
+                <filter string="Credit Notes" name="credit_notes" domain="[('kind', '=', 'credit_note')]"/>
+                <filter string="Payments" name="payments" domain="[('kind', '=', 'allocation')]"/>
+                <filter string="Unallocated" name="unallocated" domain="[('kind', '=', 'unallocated')]"/>
+                <separator/>
+                <filter string="Date" name="date" date="date"/>
+                <group>
+                    <filter string="Tenant" name="group_tenant" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Unit" name="group_unit" context="{'group_by': 'property_id'}"/>
+                    <filter string="Building" name="group_building" context="{'group_by': 'subproject_id'}"/>
+                    <filter string="Compound" name="group_compound" context="{'group_by': 'property_project_id'}"/>
+                    <filter string="Contract" name="group_contract" context="{'group_by': 'tenancy_id'}"/>
+                    <filter string="Type" name="group_kind" context="{'group_by': 'kind'}"/>
+                    <filter string="Month" name="group_month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ===================== Wizard ===================== -->
+    <record id="rental_tenant_ledger_wizard_form" model="ir.ui.view">
+        <field name="name">rental.tenant.ledger.wizard.form</field>
+        <field name="model">rental.tenant.ledger.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <div class="oe_title mb24">
+                    <h1>Tenant / Unit Ledger</h1>
+                </div>
+                <group>
+                    <group string="Period">
+                        <field name="date_from" invisible="open_only"/>
+                        <field name="date_to" string="As of / To"/>
+                        <field name="open_only"/>
+                    </group>
+                    <group string="Tenants &amp; Units">
+                        <field name="partner_ids" widget="many2many_tags"
+                               options="{'no_create': True}" placeholder="All tenants"/>
+                        <field name="property_project_id" options="{'no_quick_create': True}"/>
+                        <field name="subproject_id" options="{'no_quick_create': True}"/>
+                        <field name="property_ids" widget="many2many_tags"
+                               options="{'no_create': True}" placeholder="All units"
+                               domain="[('property_project_id', '=?', property_project_id), ('subproject_id', '=?', subproject_id)]"/>
+                    </group>
+                </group>
+                <group>
+                    <group>
+                        <field name="group_by" widget="radio"/>
+                    </group>
+                    <group>
+                        <field name="include_unallocated"/>
+                    </group>
+                </group>
+                <div class="text-muted small">
+                    Match: <b>M</b> = fully matched, <b>P</b> = partially matched, blank = open.
+                    Payments are split onto the unit of the invoice they were matched with;
+                    payments not yet matched show as <i>Unallocated</i>.
+                </div>
+                <footer>
+                    <button string="View" type="object" name="action_view"
+                            class="btn btn-primary" icon="fa-eye"/>
+                    <button string="Excel" type="object" name="action_excel"
+                            class="btn btn-secondary" icon="fa-file-excel-o"/>
+                    <button string="Cancel" special="cancel" class="btn btn-outline-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="rental_tenant_ledger_wizard_action" model="ir.actions.act_window">
+        <field name="name">Tenant / Unit Ledger</field>
+        <field name="res_model">rental.tenant.ledger.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Properties > Reports -->
+    <menuitem id="menu_tenant_unit_ledger"
+              name="Tenant / Unit Ledger"
+              parent="rental_management.menu_print_report"
+              action="rental_tenant_ledger_wizard_action"
+              groups="rental_management.property_rental_manager,rental_management.property_rental_officer"
+              sequence="8"/>
+    <!-- Accounting > Reporting -->
+    <menuitem id="menu_tenant_unit_ledger_accounting"
+              name="Tenant / Unit Ledger"
+              parent="account.menu_finance_reports"
+              action="rental_tenant_ledger_wizard_action"
+              groups="account.group_account_readonly,account.group_account_invoice"
+              sequence="90"/>
+</odoo>

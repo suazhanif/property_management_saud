@@ -1,0 +1,221 @@
+<odoo>
+    <record id="action_report_final_statement" model="ir.actions.report">
+        <field name="name">Final Settlement Statement</field>
+        <field name="model">tenancy.details</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">rental_management.report_final_statement_document</field>
+        <field name="report_file">rental_management.report_final_statement_document</field>
+        <field name="print_report_name">'Final Statement - %s' % (object.tenancy_seq)</field>
+    </record>
+
+    <template id="report_final_statement_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="money" t-value="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    <t t-set="payment_lines" t-value="o._get_final_statement_payment_lines()"/>
+                    <t t-set="payment_summary" t-value="o._get_final_statement_payment_summary(payment_lines)"/>
+                    <t t-set="pdc_lines" t-value="o._get_final_statement_pdc_lines()"/>
+                    <t t-set="th_style" t-value="'padding:5px;border:1px solid #714B67;'"/>
+                    <t t-set="td_style" t-value="'padding:4px;border:1px solid #eee;'"/>
+                    <t t-set="section_style" t-value="'padding:4px;background:#faf8fa;font-weight:bold;border:1px solid #eee;'"/>
+                    <div class="page" style="font-family:Arial,sans-serif;font-size:11.5px;color:#222;">
+
+                        <div style="text-align:center;background:#714B67;color:#fff;padding:14px;border-radius:6px;margin-bottom:14px;">
+                            <h2 style="margin:0;color:#fff;">
+                                <span t-esc="o.property_id.property_project_id.name or o.property_id.name"/>
+                            </h2>
+                            <div style="font-size:13px;">Final Statement</div>
+                        </div>
+
+                        <!-- ============ HEADER INFO ============ -->
+                        <table style="width:100%;border-collapse:collapse;margin-bottom:14px;">
+                            <tr>
+                                <td style="width:25%;padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Ref</td>
+                                <td style="width:25%;padding:4px 8px;border:1px solid #eee;"><span t-field="o.tenancy_seq"/></td>
+                                <td style="width:25%;padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Tenant name</td>
+                                <td style="width:25%;padding:4px 8px;border:1px solid #eee;"><span t-field="o.tenancy_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Unit no.</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;"><span t-field="o.property_id.building_no"/></td>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Move in dt</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;"><span t-field="o.start_date"/></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Move out dt</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;"><span t-field="o.move_out_date"/></td>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Key handover</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;"><span t-field="o.key_handover_date"/></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Lease period</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;">
+                                    <span t-field="o.start_date"/> to <span t-field="o.end_date"/>
+                                </td>
+                                <td style="padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;">Termination type</td>
+                                <td style="padding:4px 8px;border:1px solid #eee;"><span t-field="o.termination_type"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- ============ SETTLEMENT ============ -->
+                        <table style="width:100%;border-collapse:collapse;">
+                            <tr style="background:#714B67;color:#fff;">
+                                <th t-att-style="th_style">Description</th>
+                                <th t-att-style="th_style">Details</th>
+                                <th t-att-style="th_style">Amount (<span t-esc="o.currency_id.symbol"/>)</th>
+                            </tr>
+
+                            <tr><td colspan="3" t-att-style="section_style">Maintenance / Repair Charges (Debit)</td></tr>
+                            <t t-foreach="o.final_maintenance_line_ids" t-as="line">
+                                <tr>
+                                    <td t-att-style="td_style"><span t-field="line.product_id.name"/></td>
+                                    <td t-att-style="td_style"><span t-field="line.description"/></td>
+                                    <td t-att-style="td_style"><span t-field="line.amount"/></td>
+                                </tr>
+                            </t>
+                            <tr style="font-weight:bold;">
+                                <td colspan="2" style="padding:4px;border:1px solid #eee;text-align:right;">Sub-Total</td>
+                                <td t-att-style="td_style"><span t-field="o.final_maintenance_amount"/></td>
+                            </tr>
+
+                            <tr><td colspan="3" t-att-style="section_style">Utility Charges (Debit)</td></tr>
+                            <t t-foreach="o.final_utility_line_ids" t-as="u">
+                                <tr>
+                                    <td t-att-style="td_style"><span t-field="u.utility_type"/>: <span t-field="u.meter_no"/></td>
+                                    <td t-att-style="td_style">Closing Reading: <span t-field="u.closing_reading"/> (<span t-field="u.closing_date"/>)</td>
+                                    <td t-att-style="td_style"><span t-field="u.amount"/></td>
+                                </tr>
+                            </t>
+                            <tr style="font-weight:bold;">
+                                <td colspan="2" style="padding:4px;border:1px solid #eee;text-align:right;">Sub-Total</td>
+                                <td t-att-style="td_style"><span t-field="o.final_utility_amount"/></td>
+                            </tr>
+
+                            <tr><td colspan="3" t-att-style="section_style">Rent</td></tr>
+                            <tr>
+                                <td t-att-style="td_style">Rent paid upto</td>
+                                <td style="border:1px solid #eee;"></td>
+                                <td t-att-style="td_style"><span t-field="o.rent_paid_upto"/></td>
+                            </tr>
+                            <tr t-if="o.rent_due_amount">
+                                <td t-att-style="td_style">Rent Due (Debit)</td>
+                                <td style="border:1px solid #eee;"></td>
+                                <td t-att-style="td_style"><span t-field="o.rent_due_amount"/></td>
+                            </tr>
+
+                            <tr><td colspan="3" t-att-style="section_style">Security Deposit (Credit)</td></tr>
+                            <tr>
+                                <td t-att-style="td_style">Security deposit held</td>
+                                <td style="border:1px solid #eee;"></td>
+                                <td t-att-style="td_style"><span t-field="o.deposit_amount"/></td>
+                            </tr>
+
+                            <tr style="font-weight:bold;background:#f0ecef;">
+                                <td colspan="2" style="padding:6px;border:1px solid #eee;">Payment Due to Tenant</td>
+                                <td style="padding:6px;border:1px solid #eee;color:#714B67;"><span t-field="o.payment_due_to_tenant"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- ============ PAYMENTS RECEIVED ============ -->
+                        <div style="margin-top:18px;margin-bottom:6px;font-weight:bold;font-size:12.5px;color:#714B67;">
+                            Payments Received
+                        </div>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <tr style="background:#714B67;color:#fff;">
+                                <th t-att-style="th_style">Date</th>
+                                <th t-att-style="th_style">Invoice</th>
+                                <th t-att-style="th_style">For</th>
+                                <th t-att-style="th_style">Method</th>
+                                <th t-att-style="th_style">Bank / Journal</th>
+                                <th t-att-style="th_style">Reference</th>
+                                <th t-att-style="th_style">Amount (<span t-esc="o.currency_id.symbol"/>)</th>
+                            </tr>
+                            <t t-if="payment_lines">
+                                <tr t-foreach="payment_lines" t-as="pay">
+                                    <td t-att-style="td_style"><span t-esc="pay['date']" t-options="{'widget': 'date'}"/></td>
+                                    <td t-att-style="td_style"><span t-esc="pay['invoice']"/></td>
+                                    <td t-att-style="td_style"><span t-esc="pay['description']"/></td>
+                                    <td t-att-style="td_style">
+                                        <strong><span t-esc="pay['method']"/></strong>
+                                        <div t-if="pay.get('detail')" style="font-size:10px;color:#666;">
+                                            <span t-esc="pay['detail']"/>
+                                        </div>
+                                    </td>
+                                    <td t-att-style="td_style"><span t-esc="pay.get('bank') or '-'"/></td>
+                                    <td t-att-style="td_style"><span t-esc="pay.get('reference') or '-'"/></td>
+                                    <td t-att-style="td_style + 'text-align:right;'">
+                                        <span t-esc="pay['amount']" t-options="money"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr t-else="">
+                                <td colspan="7" style="padding:6px;border:1px solid #eee;text-align:center;color:#888;">
+                                    No payments recorded against this contract.
+                                </td>
+                            </tr>
+                            <t t-if="payment_summary">
+                                <tr t-foreach="payment_summary" t-as="summary">
+                                    <td colspan="6" style="padding:4px;border:1px solid #eee;text-align:right;">
+                                        Total by <span t-esc="summary[0]"/>
+                                    </td>
+                                    <td t-att-style="td_style + 'text-align:right;'">
+                                        <span t-esc="summary[1]" t-options="money"/>
+                                    </td>
+                                </tr>
+                                <tr style="font-weight:bold;background:#f0ecef;">
+                                    <td colspan="6" style="padding:6px;border:1px solid #eee;text-align:right;">Total Received</td>
+                                    <td style="padding:6px;border:1px solid #eee;text-align:right;color:#714B67;">
+                                        <span t-esc="sum(s[1] for s in payment_summary)" t-options="money"/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </table>
+
+                        <!-- ============ PDC CHEQUE REGISTER (rental_management_pdc) ============ -->
+                        <t t-if="pdc_lines">
+                            <div style="margin-top:18px;margin-bottom:6px;font-weight:bold;font-size:12.5px;color:#714B67;">
+                                PDC Cheque Register
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;">
+                                <tr style="background:#714B67;color:#fff;">
+                                    <th t-att-style="th_style">#</th>
+                                    <th t-att-style="th_style">Cheque No.</th>
+                                    <th t-att-style="th_style">Bank</th>
+                                    <th t-att-style="th_style">Due Date</th>
+                                    <th t-att-style="th_style">Invoice</th>
+                                    <th t-att-style="th_style">Status</th>
+                                    <th t-att-style="th_style">Amount (<span t-esc="o.currency_id.symbol"/>)</th>
+                                </tr>
+                                <tr t-foreach="pdc_lines" t-as="chq">
+                                    <td t-att-style="td_style"><span t-esc="chq['sequence']"/></td>
+                                    <td t-att-style="td_style"><span t-esc="chq.get('cheque_no') or '-'"/></td>
+                                    <td t-att-style="td_style"><span t-esc="chq.get('bank') or '-'"/></td>
+                                    <td t-att-style="td_style"><span t-esc="chq['due_date']" t-options="{'widget': 'date'}"/></td>
+                                    <td t-att-style="td_style"><span t-esc="chq.get('invoices') or '-'"/></td>
+                                    <td t-att-style="td_style"><strong><span t-esc="chq['state']"/></strong></td>
+                                    <td t-att-style="td_style + 'text-align:right;'">
+                                        <span t-esc="chq['amount']" t-options="money"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </t>
+
+                        <table style="width:100%;margin-top:60px;text-align:center;">
+                            <tr>
+                                <td>_________________________</td>
+                                <td>______________________________</td>
+                                <td>____________________________</td>
+                            </tr>
+                            <tr>
+                                <td>Leasing/Admin</td>
+                                <td>Maintenance In charge</td>
+                                <td>Accounts</td>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="invoice_report_inherit" inherit_id="account.report_invoice_document">
+            <xpath expr="//div[@id='informations']" position="inside">
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.tenancy_property_id">
+                    <strong>Unit No.:</strong>
+                    <p class="m-0" t-esc="o.tenancy_property_id.building_no or o.tenancy_property_id.name"/>
+                    <p class="m-0 text-muted small" t-if="o.tenancy_property_id.subproject_id or o.tenancy_property_id.property_project_id">
+                        <t t-esc="', '.join(n for n in [o.tenancy_property_id.subproject_id.name, o.tenancy_property_id.property_project_id.name] if n)"/>
+                    </p>
+                </div>
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.sold_property_id">
+                    <strong>Property:</strong>
+                    <p class="m-0" t-esc="o.sold_property_id.name"/>
+                </div>
+                <div class="col-auto col-3 mw-100 mb-2" t-if="o.rent_period_from and o.rent_period_to">
+                    <strong>Period:</strong>
+                    <p class="m-0">
+                        From <span t-field="o.rent_period_from"/>
+                        To <span t-field="o.rent_period_to"/>
+                    </p>
+                </div>
+                <div class="col-auto col-3 mw-100 mb-2">
+                    <t t-if="o.tenancy_id">
+                        <strong>Tenancy Contract</strong>
+                        <p class="m-0" t-esc="o.tenancy_id.tenancy_seq"/>
+                    </t>
+                    <t t-if="o.sold_id">
+                        <strong>Sold Contract</strong>
+                        <p t-esc="o.sold_id.sold_seq"/>
+                    </t>
+                </div>
+            </xpath>
+            <!-- Quantity column: show the period instead of the "Units" UoM -->
+            <xpath expr="//td[@name='td_quantity']/span[@t-field='line.product_uom_id']" position="attributes">
+                <attribute name="t-if">not line.rent_period_label</attribute>
+            </xpath>
+            <xpath expr="//td[@name='td_quantity']/span[@t-field='line.product_uom_id']" position="after">
+                <span t-if="line.rent_period_label" class="text-nowrap" t-esc="line.rent_period_label"/>
+            </xpath>
+        </template>
+    </data>
+</odoo>

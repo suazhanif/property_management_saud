@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== Analysis views ===================== -->
+    <record id="property_utility_consumption_report_view_pivot" model="ir.ui.view">
+        <field name="name">property.utility.consumption.report.pivot</field>
+        <field name="model">property.utility.consumption.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Utility Consumption" sample="1">
+                <field name="employee_id" type="row"/>
+                <field name="water_qty" type="measure"/>
+                <field name="electricity_qty" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="property_utility_consumption_report_view_graph" model="ir.ui.view">
+        <field name="name">property.utility.consumption.report.graph</field>
+        <field name="model">property.utility.consumption.report</field>
+        <field name="arch" type="xml">
+            <graph string="Utility Consumption" type="bar" sample="1">
+                <field name="employee_id"/>
+                <field name="electricity_qty" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="property_utility_consumption_report_view_list" model="ir.ui.view">
+        <field name="name">property.utility.consumption.report.list</field>
+        <field name="model">property.utility.consumption.report</field>
+        <field name="arch" type="xml">
+            <list string="Utility Consumption" create="0" edit="0" delete="0"
+                  decoration-muted="occupancy_status == 'vacant'"
+                  decoration-danger="meter_reset">
+                <field name="reading_date"/>
+                <field name="previous_date" optional="hide"/>
+                <field name="utility_type" widget="badge"
+                       decoration-info="utility_type == 'water'"
+                       decoration-warning="utility_type == 'electricity'"/>
+                <field name="employee_id"/>
+                <field name="occupant_id" optional="hide"/>
+                <field name="department_id" optional="hide"/>
+                <field name="occupy_id" optional="show"/>
+                <field name="property_id"/>
+                <field name="subproject_id" optional="show"/>
+                <field name="property_project_id" optional="hide"/>
+                <field name="reference" optional="hide"/>
+                <field name="opening_reading" optional="show"/>
+                <field name="closing_reading" optional="show"/>
+                <field name="share_count" optional="hide"/>
+                <field name="occupancy_status" optional="show"/>
+                <field name="water_qty" sum="Total Water"/>
+                <field name="electricity_qty" sum="Total Electricity"/>
+                <field name="meter_reset" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="property_utility_consumption_report_view_search" model="ir.ui.view">
+        <field name="name">property.utility.consumption.report.search</field>
+        <field name="model">property.utility.consumption.report</field>
+        <field name="arch" type="xml">
+            <search string="Utility Consumption">
+                <field name="employee_id"/>
+                <field name="occupant_id"/>
+                <field name="department_id"/>
+                <field name="property_id"/>
+                <field name="subproject_id"/>
+                <field name="property_project_id"/>
+                <filter string="Water" name="water" domain="[('utility_type', '=', 'water')]"/>
+                <filter string="Electricity" name="electricity" domain="[('utility_type', '=', 'electricity')]"/>
+                <separator/>
+                <filter string="Occupied" name="occupied" domain="[('occupancy_status', 'in', ('occupied', 'shared'))]"/>
+                <filter string="Vacant / Unassigned" name="vacant" domain="[('occupancy_status', '=', 'vacant')]"/>
+                <separator/>
+                <filter string="Family Accommodation" name="family" domain="[('sale_lease', '=', 'employee_family')]"/>
+                <filter string="Bachelor Accommodation" name="bachelor" domain="[('sale_lease', '=', 'bachelor')]"/>
+                <separator/>
+                <filter string="Meter Reset / Wrong Entry" name="meter_reset" domain="[('meter_reset', '=', True)]"/>
+                <separator/>
+                <filter string="Reading Date" name="filter_reading_date" date="reading_date"/>
+                <group>
+                    <filter string="Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Occupant" name="group_occupant" context="{'group_by': 'occupant_id'}"/>
+                    <filter string="Department" name="group_department" context="{'group_by': 'department_id'}"/>
+                    <filter string="Property" name="group_property" context="{'group_by': 'property_id'}"/>
+                    <filter string="Building" name="group_building" context="{'group_by': 'subproject_id'}"/>
+                    <filter string="Compound" name="group_compound" context="{'group_by': 'property_project_id'}"/>
+                    <filter string="Utility" name="group_utility" context="{'group_by': 'utility_type'}"/>
+                    <filter string="Month" name="group_month" context="{'group_by': 'reading_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="property_utility_consumption_report_action" model="ir.actions.act_window">
+        <field name="name">Utility Consumption</field>
+        <field name="res_model">property.utility.consumption.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'search_default_occupied': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No utility readings yet</p>
+            <p>Consumption is calculated from consecutive water / electricity readings of each
+               unit and allocated to the employee occupying the unit during that period.</p>
+        </field>
+    </record>
+
+    <!-- ===================== Property form ===================== -->
+    <record id="property_details_form_utility_inherit" model="ir.ui.view">
+        <field name="name">property.details.form.utility.inherit</field>
+        <field name="model">property.details</field>
+        <field name="inherit_id" ref="rental_management.property_details_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_utility_consumption" type="object"
+                        class="oe_stat_button" icon="fa-tachometer">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="utility_electricity_total" digits="[16, 0]"/> kWh
+                        </span>
+                        <span class="o_stat_text">
+                            <field name="utility_water_total" digits="[16, 1]"/> m³
+                        </span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='water_readings_ids']/list/field[@name='name']" position="after">
+                <field name="previous_reading" optional="hide"/>
+                <field name="consumption" sum="Total"/>
+            </xpath>
+            <xpath expr="//field[@name='electricity_readings_ids']/list/field[@name='name']" position="after">
+                <field name="previous_reading" optional="hide"/>
+                <field name="consumption" sum="Total"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================== Occupancy form ===================== -->
+    <record id="occupy_details_form_utility_inherit" model="ir.ui.view">
+        <field name="name">occupy.details.form.utility.inherit</field>
+        <field name="model">occupy.details</field>
+        <field name="inherit_id" ref="rental_management.occupy_details_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/div[hasclass('oe_title')]" position="before">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_utility_consumption" type="object"
+                            class="oe_stat_button" icon="fa-tachometer"
+                            invisible="state == 'draft'">
+                        <div class="o_stat_info">
+                            <span class="o_stat_value">
+                                <field name="utility_electricity_total" digits="[16, 0]"/> kWh
+                            </span>
+                            <span class="o_stat_text">
+                                <field name="utility_water_total" digits="[16, 1]"/> m³
+                            </span>
+                        </div>
+                    </button>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================== Employee form ===================== -->
+    <record id="hr_employee_form_utility_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.utility.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_utility_consumption" type="object"
+                        class="oe_stat_button" icon="fa-tachometer"
+                        groups="rental_management.property_rental_manager,rental_management.property_rental_officer">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="utility_electricity_total" digits="[16, 0]"/> kWh
+                        </span>
+                        <span class="o_stat_text">
+                            <field name="utility_water_total" digits="[16, 1]"/> m³
+                        </span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================== Menu ===================== -->
+    <menuitem name="Utility Consumption"
+              id="menu_property_utility_consumption_report"
+              parent="rental_management.menu_print_report"
+              action="property_utility_consumption_report_action"
+              groups="rental_management.property_rental_manager,rental_management.property_rental_officer"
+              sequence="9"/>
+</odoo>

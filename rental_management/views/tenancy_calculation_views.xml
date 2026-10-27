@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="tenancy_details_form_calculation_inherit" model="ir.ui.view">
+        <field name="name">tenancy.details.form.calculation.inherit</field>
+        <field name="model">tenancy.details</field>
+        <field name="inherit_id" ref="rental_management.tenancy_details_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='remain_tenancy']" position="attributes">
+                <attribute name="decoration-danger">remain_tenancy &gt; 0</attribute>
+            </xpath>
+            <xpath expr="//field[@name='remain_tenancy']" position="after">
+                <field name="credit_refund_due" invisible="not credit_note_total"/>
+                <field name="credit_note_total" invisible="1"/>
+                <field name="net_balance_tenancy" class="oe_subtotal_footer_separator"
+                       invisible="not credit_note_total"/>
+                <field name="draft_invoice_amount" invisible="not draft_invoice_amount"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

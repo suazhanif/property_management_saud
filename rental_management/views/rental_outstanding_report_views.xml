@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================== Report: list ===================== -->
+    <record id="rental_outstanding_report_view_list" model="ir.ui.view">
+        <field name="name">rental.outstanding.report.list</field>
+        <field name="model">rental.outstanding.report</field>
+        <field name="arch" type="xml">
+            <list string="Outstanding" create="0" edit="0" delete="0"
+                  decoration-danger="aging == '90_plus'"
+                  decoration-warning="aging in ('31_60', '61_90')"
+                  decoration-muted="aging == 'not_due'">
+                <field name="currency_id" column_invisible="1"/>
+                <field name="partner_id"/>
+                <field name="property_project_id" optional="hide"/>
+                <field name="subproject_id" optional="show"/>
+                <field name="property_id"/>
+                <field name="unit_no" optional="hide"/>
+                <field name="floor" optional="hide"/>
+                <field name="tenancy_id" optional="show"/>
+                <field name="move_id" widget="many2one" optional="show"/>
+                <field name="rent_type" optional="show"/>
+                <field name="description" optional="hide"/>
+                <field name="invoice_date" optional="show"/>
+                <field name="invoice_date_due"/>
+                <field name="days_overdue" optional="show"/>
+                <field name="aging" widget="badge"
+                       decoration-danger="aging == '90_plus'"
+                       decoration-warning="aging in ('31_60', '61_90')"
+                       decoration-info="aging == '0_30'"
+                       decoration-success="aging == 'not_due'"/>
+                <field name="amount_total" sum="Total" optional="show"/>
+                <field name="amount_paid" sum="Total" optional="show"/>
+                <field name="amount_residual" sum="Total" class="fw-bold"/>
+                <field name="payment_state" widget="badge" optional="hide"/>
+                <button name="action_open_invoice" type="object" icon="fa-external-link"
+                        title="Open Invoice"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ===================== Report: pivot ===================== -->
+    <record id="rental_outstanding_report_view_pivot" model="ir.ui.view">
+        <field name="name">rental.outstanding.report.pivot</field>
+        <field name="model">rental.outstanding.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Outstanding" sample="1">
+                <field name="partner_id" type="row"/>
+                <field name="aging" type="col"/>
+                <field name="amount_residual" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ===================== Report: search ===================== -->
+    <record id="rental_outstanding_report_view_search" model="ir.ui.view">
+        <field name="name">rental.outstanding.report.search</field>
+        <field name="model">rental.outstanding.report</field>
+        <field name="arch" type="xml">
+            <search string="Outstanding">
+                <field name="partner_id"/>
+                <field name="property_id"/>
+                <field name="subproject_id"/>
+                <field name="property_project_id"/>
+                <field name="tenancy_id"/>
+                <field name="move_id"/>
+                <filter string="Overdue" name="overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter string="Not Due Yet" name="not_due" domain="[('is_overdue', '=', False)]"/>
+                <separator/>
+                <filter string="Rent Invoices" name="rent_only"
+                        domain="[('rent_type', 'in', ('rent', 'full_rent'))]"/>
+                <filter string="Other Invoices" name="non_rent"
+                        domain="['|', ('rent_type', '=', False), ('rent_type', 'not in', ('rent', 'full_rent'))]"/>
+                <separator/>
+                <filter string="1-30 Days" name="aging_30" domain="[('aging', '=', '0_30')]"/>
+                <filter string="31-60 Days" name="aging_60" domain="[('aging', '=', '31_60')]"/>
+                <filter string="61-90 Days" name="aging_90" domain="[('aging', '=', '61_90')]"/>
+                <filter string="90+ Days" name="aging_90_plus" domain="[('aging', '=', '90_plus')]"/>
+                <separator/>
+                <filter string="Credit Notes" name="refunds" domain="[('move_type', '=', 'out_refund')]"/>
+                <group>
+                    <filter string="Tenant" name="group_tenant" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Unit" name="group_unit" context="{'group_by': 'property_id'}"/>
+                    <filter string="Building" name="group_building" context="{'group_by': 'subproject_id'}"/>
+                    <filter string="Compound" name="group_compound" context="{'group_by': 'property_project_id'}"/>
+                    <filter string="Contract" name="group_contract" context="{'group_by': 'tenancy_id'}"/>
+                    <filter string="Aging" name="group_aging" context="{'group_by': 'aging'}"/>
+                    <filter string="Invoice For" name="group_rent_type" context="{'group_by': 'rent_type'}"/>
+                    <filter string="Due Month" name="group_due" context="{'group_by': 'invoice_date_due:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Direct menu action (no wizard): opens grouped Tenant > Unit -->
+    <record id="rental_outstanding_report_action" model="ir.actions.act_window">
+        <field name="name">Outstanding Analysis</field>
+        <field name="res_model">rental.outstanding.report</field>
+        <field name="view_mode">list,pivot</field>
+        <field name="search_view_id" ref="rental_outstanding_report_view_search"/>
+        <field name="context">{'search_default_group_tenant': 1, 'search_default_group_unit': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No outstanding tenant invoices</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_outstanding_analysis"
+              name="Outstanding Analysis"
+              parent="rental_management.menu_print_report"
+              action="rental_outstanding_report_action"
+              groups="rental_management.property_rental_manager,rental_management.property_rental_officer"
+              sequence="4"/>
+</odoo>

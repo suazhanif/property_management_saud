@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Compound form: "Under Head Lease" toggle + Head Lease tab -->
+        <record id="view_property_project_head_lease_inherit" model="ir.ui.view">
+            <field name="name">property.project.form.head.lease.inherit</field>
+            <field name="model">property.project</field>
+            <field name="inherit_id" ref="rental_management.property_project_view_form"/>
+            <field name="arch" type="xml">
+                <!-- Toggle next to "Has Buildings" -->
+                <xpath expr="//label[@for='is_sub_project']/.." position="after">
+                    <span class="ms-4">
+                        <field name="is_head_lease"/>
+                        <label for="is_head_lease"/>
+                    </span>
+                </xpath>
+
+                <!-- Expiry banner -->
+                <xpath expr="//div[@name='button_box']" position="before">
+                    <field name="head_lease_state" invisible="1"/>
+                    <div class="alert alert-warning text-center mb-2" role="alert"
+                         invisible="head_lease_state != 'expiring'">
+                        Head lease ends on <strong><field name="head_lease_end_date" readonly="1"/></strong>
+                        (<field name="head_lease_days_left" readonly="1" class="oe_inline"/> days left).
+                    </div>
+                    <div class="alert alert-danger text-center mb-2" role="alert"
+                         invisible="head_lease_state != 'expired'">
+                        Head lease expired on <strong><field name="head_lease_end_date" readonly="1"/></strong>.
+                    </div>
+                </xpath>
+
+                <xpath expr="//notebook/page[@name='basic_details']" position="after">
+                    <page name="head_lease" string="Head Lease" invisible="not is_head_lease">
+                        <group>
+                            <group string="Lease Contract">
+                                <field name="head_lease_ref"/>
+                                <field name="head_lease_lessor_id"
+                                       options="{'no_quick_create': True}"
+                                       required="is_head_lease"/>
+                                <field name="head_lease_lessor_contact_id"
+                                       invisible="not head_lease_lessor_id"
+                                       options="{'no_quick_create': True}"/>
+                                <field name="head_lease_lessor_phone" widget="phone"
+                                       invisible="not head_lease_lessor_id"/>
+                                <field name="head_lease_lessor_email" widget="email"
+                                       invisible="not head_lease_lessor_id"/>
+                                <field name="head_lease_signing_date"/>
+                                <field name="head_lease_registration_no"/>
+                                <field name="head_lease_registration_date"/>
+                                <field name="head_lease_document_name" invisible="1"/>
+                                <field name="head_lease_document" filename="head_lease_document_name"
+                                       widget="binary"/>
+                            </group>
+                            <group string="Lease Term">
+                                <field name="head_lease_start_date"/>
+                                <field name="head_lease_end_date" required="is_head_lease"/>
+                                <field name="head_lease_duration"/>
+                                <field name="head_lease_days_left"/>
+                                <label for="head_lease_notice_days"/>
+                                <div>
+                                    <field name="head_lease_notice_days" class="oe_inline"/> days
+                                </div>
+                                <field name="head_lease_notice_deadline"
+                                       invisible="not head_lease_notice_deadline"/>
+                                <field name="head_lease_renewal_option"/>
+                                <field name="head_lease_renewal_terms"
+                                       invisible="head_lease_renewal_option in (False, 'none')"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="Financial Terms">
+                                <field name="head_lease_amount"/>
+                                <field name="head_lease_rent_frequency"/>
+                                <field name="head_lease_annual_rent"/>
+                                <field name="head_lease_payment_method"/>
+                                <field name="head_lease_installments"
+                                       invisible="head_lease_payment_method != 'cheque'"/>
+                                <field name="head_lease_deposit"/>
+                                <field name="head_lease_escalation_percent"/>
+                                <field name="head_lease_escalation_start"
+                                       invisible="not head_lease_escalation_percent"/>
+                                <label for="head_lease_rent_free_days"/>
+                                <div>
+                                    <field name="head_lease_rent_free_days" class="oe_inline"/> days
+                                </div>
+                            </group>
+                            <group string="Usage &amp; Responsibilities">
+                                <field name="head_lease_permitted_use"/>
+                                <field name="head_lease_leased_area"/>
+                                <field name="head_lease_maintenance_by"/>
+                                <field name="head_lease_utilities_by"/>
+                                <field name="head_lease_sublet_allowed"/>
+                                <field name="head_lease_insurance_required"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="Expiry Reminder">
+                                <label for="head_lease_reminder_days"/>
+                                <div>
+                                    <field name="head_lease_reminder_days" class="oe_inline"/> days before end date
+                                </div>
+                                <field name="head_lease_reminder_date"/>
+                                <field name="head_lease_reminder_sent"/>
+                                <field name="head_lease_reminder_sent_date"
+                                       invisible="not head_lease_reminder_sent"/>
+                                <button name="action_send_head_lease_reminder" type="object"
+                                        string="Send Reminder Now" icon="fa-envelope"
+                                        class="btn btn-secondary" colspan="2"
+                                        groups="rental_management.property_rental_manager"/>
+                                <div class="text-muted" colspan="2">
+                                    The reminder is emailed to the Assigned Officers of this compound
+                                    (Rental Managers if none are assigned).
+                                </div>
+                            </group>
+                            <group string="Other Documents">
+                                <field name="head_lease_attachment_ids" widget="many2many_binary"
+                                       nolabel="1" colspan="2"/>
+                            </group>
+                        </group>
+                        <field name="head_lease_note" placeholder="Lease notes..."/>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Compound list: optional head-lease columns -->
+        <record id="view_property_project_list_head_lease_inherit" model="ir.ui.view">
+            <field name="name">property.project.list.head.lease.inherit</field>
+            <field name="model">property.project</field>
+            <field name="inherit_id" ref="rental_management.property_project_view_list"/>
+            <field name="arch" type="xml">
+                <field name="status" position="before">
+                    <field name="is_head_lease" optional="hide"/>
+                    <field name="head_lease_ref" optional="hide"/>
+                    <field name="head_lease_lessor_id" optional="hide"/>
+                    <field name="head_lease_end_date" optional="show"/>
+                    <field name="head_lease_notice_deadline" optional="hide"/>
+                </field>
+            </field>
+        </record>
+
+        <!-- Compound search: head-lease filters -->
+        <record id="view_property_project_search_head_lease_inherit" model="ir.ui.view">
+            <field name="name">property.project.search.head.lease.inherit</field>
+            <field name="model">property.project</field>
+            <field name="inherit_id" ref="rental_management.property_project_search_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//search/group" position="before">
+                    <filter string="Under Head Lease" name="head_lease"
+                            domain="[('is_head_lease', '=', True)]"/>
+                    <filter string="Head Lease Expiring (90 days)" name="head_lease_expiring"
+                            domain="[('is_head_lease', '=', True),
+                                     ('head_lease_end_date', '&gt;=', context_today().strftime('%Y-%m-%d')),
+                                     ('head_lease_end_date', '&lt;=', (context_today() + relativedelta(days=90)).strftime('%Y-%m-%d'))]"/>
+                    <filter string="Head Lease Expired" name="head_lease_expired"
+                            domain="[('is_head_lease', '=', True),
+                                     ('head_lease_end_date', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

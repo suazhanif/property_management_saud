@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="rule_rental_outstanding_report_officer" model="ir.rule">
+            <field name="name">Outstanding Report: Officer Sees Assigned Units Only</field>
+            <field name="model_id" ref="rental_management.model_rental_outstanding_report"/>
+            <field name="domain_force">[
+                '|', '|', '|',
+                ('property_id.user_ids', 'in', user.id),
+                ('property_id.subproject_id.user_ids', 'in', user.id),
+                ('property_id.subproject_id.property_project_id.user_ids', 'in', user.id),
+                ('property_id.property_project_id.user_ids', 'in', user.id)
+            ]</field>
+            <field name="groups" eval="[(4, ref('rental_management.property_rental_officer'))]"/>
+        </record>
+        <record id="rule_rental_outstanding_report_company" model="ir.rule">
+            <field name="name">Outstanding Report: Multi-company</field>
+            <field name="model_id" ref="rental_management.model_rental_outstanding_report"/>
+            <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+            <field name="global" eval="True"/>
+        </record>
+    </data>
+</odoo>

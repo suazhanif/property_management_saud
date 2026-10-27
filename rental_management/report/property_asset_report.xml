@@ -1,0 +1,440 @@
+<odoo>
+    <record id="action_report_property_assets" model="ir.actions.report">
+        <field name="name">Asset Register</field>
+        <field name="model">property.details</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">rental_management.report_property_asset_document</field>
+        <field name="report_file">rental_management.report_property_asset_document</field>
+        <field name="binding_model_id" ref="model_property_details"/>
+        <field name="binding_type">report</field>
+        <field name="print_report_name">'Asset Register - %s' % (object.property_seq or object.name)</field>
+    </record>
+
+        <template id="report_property_asset_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="occupants" t-value="o._asset_register_occupants()"/>
+                    <t t-set="history" t-value="o._asset_register_custody_history()"/>
+                    <t t-set="money" t-value="{'widget': 'monetary', 'display_currency': o.currency_id}"/>
+                    <t t-set="th" t-value="'padding:5px;border:1px solid #714B67;'"/>
+                    <t t-set="td" t-value="'padding:4px;border:1px solid #eee;'"/>
+                    <t t-set="lbl" t-value="'padding:4px 8px;background:#faf8fa;font-weight:bold;border:1px solid #eee;width:18%;'"/>
+                    <t t-set="sec" t-value="'margin-top:16px;margin-bottom:6px;font-weight:bold;font-size:12.5px;color:#714B67;'"/>
+                    <div class="page" style="font-family:Arial,sans-serif;font-size:11px;color:#222;">
+
+                        <div style="text-align:center;background:#714B67;color:#fff;padding:12px;border-radius:6px;margin-bottom:12px;">
+                            <h2 style="margin:0;color:#fff;"><span t-esc="o.name"/></h2>
+                            <div style="font-size:13px;">Asset Register</div>
+                        </div>
+
+                        <!-- ============ UNIT ============ -->
+                        <div t-att-style="sec">Unit Details</div>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <tr>
+                                <td t-att-style="lbl">Compound</td>
+                                <td t-att-style="td"><span t-esc="o.property_project_id.name or '-'"/></td>
+                                <td t-att-style="lbl">Building</td>
+                                <td t-att-style="td"><span t-esc="o.subproject_id.name or '-'"/></td>
+                            </tr>
+                            <tr>
+                                <td t-att-style="lbl">Unit Code</td>
+                                <td t-att-style="td"><span t-esc="o.property_seq or '-'"/></td>
+                                <td t-att-style="lbl">Unit No. / Floor</td>
+                                <td t-att-style="td"><span t-esc="o.building_no or '-'"/> / <span t-esc="o.floor"/></td>
+                            </tr>
+                            <tr>
+                                <td t-att-style="lbl">Unit Type</td>
+                                <td t-att-style="td"><span t-esc="o.property_subtype_id.name or '-'"/></td>
+                                <td t-att-style="lbl">Property For</td>
+                                <td t-att-style="td"><span t-field="o.sale_lease"/></td>
+                            </tr>
+                            <tr>
+                                <td t-att-style="lbl">Status</td>
+                                <td t-att-style="td"><span t-field="o.stage"/></td>
+                                <td t-att-style="lbl">Asset Template</td>
+                                <td t-att-style="td"><span t-esc="o.asset_template_id.name or '-'"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- ============ OCCUPANTS & CONTRACTS ============ -->
+                        <div t-att-style="sec">Occupant / Tenant &amp; Contract Details</div>
+                        <t t-if="occupants">
+                            <t t-foreach="occupants" t-as="occ">
+                                <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+                                    <tr style="background:#f0ecef;">
+                                        <td colspan="4" style="padding:5px 8px;border:1px solid #eee;font-weight:bold;">
+                                            <span t-esc="occ['name']"/>
+                                            <span style="font-weight:normal;color:#666;">
+                                                (<span t-esc="occ['kind']"/>)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td t-att-style="lbl">Employee Code</td>
+                                        <td t-att-style="td"><span t-esc="occ['employee_code'] or '-'"/></td>
+                                        <td t-att-style="lbl">Civil ID</td>
+                                        <td t-att-style="td"><span t-esc="occ['civil_id'] or '-'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td t-att-style="lbl">Department</td>
+                                        <td t-att-style="td"><span t-esc="occ['department'] or '-'"/></td>
+                                        <td t-att-style="lbl">Designation</td>
+                                        <td t-att-style="td"><span t-esc="occ['designation'] or '-'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td t-att-style="lbl">Phone</td>
+                                        <td t-att-style="td"><span t-esc="occ['phone'] or '-'"/></td>
+                                        <td t-att-style="lbl">Email</td>
+                                        <td t-att-style="td"><span t-esc="occ['email'] or '-'"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td t-att-style="lbl">Contract Ref.</td>
+                                        <td t-att-style="td"><span t-esc="occ['contract_ref'] or '-'"/></td>
+                                        <td t-att-style="lbl">Contract Type</td>
+                                        <td t-att-style="td">
+                                            <span t-esc="occ['contract_type'] or '-'"/>
+                                            <t t-if="occ['bed']"> · Bed <span t-esc="occ['bed']"/></t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td t-att-style="lbl">Start Date</td>
+                                        <td t-att-style="td"><span t-esc="occ['start']" t-options="{'widget': 'date'}"/></td>
+                                        <td t-att-style="lbl">End Date</td>
+                                        <td t-att-style="td">
+                                            <span t-if="occ['end']" t-esc="occ['end']" t-options="{'widget': 'date'}"/>
+                                            <span t-else="">-</span>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="occ['amount']">
+                                        <td t-att-style="lbl">Rent</td>
+                                        <td colspan="3" t-att-style="td">
+                                            <span t-esc="occ['amount']"
+                                                  t-options="{'widget': 'monetary', 'display_currency': occ['currency'] or o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </t>
+                        </t>
+                        <div t-else="" style="padding:6px;border:1px solid #eee;text-align:center;color:#888;">
+                            The unit is currently not occupied.
+                        </div>
+
+                        <!-- ============ ASSETS ============ -->
+                        <div t-att-style="sec">Assets</div>
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#714B67;color:#fff;">
+                                    <th t-att-style="th">#</th>
+                                    <th t-att-style="th">Asset</th>
+                                    <th t-att-style="th">Category</th>
+                                    <th t-att-style="th">Brand / Model</th>
+                                    <th t-att-style="th">Serial / Tag</th>
+                                    <th t-att-style="th">Qty</th>
+                                    <th t-att-style="th">Condition</th>
+                                    <th t-att-style="th">Purchase Date</th>
+                                    <th t-att-style="th">Purchase Value</th>
+                                    <th t-att-style="th">Responsible</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="o.asset_ids">
+                                    <tr t-foreach="o.asset_ids" t-as="a">
+                                        <td t-att-style="td"><span t-esc="a_index + 1"/></td>
+                                        <td t-att-style="td"><span t-esc="a.name"/></td>
+                                        <td t-att-style="td"><span t-esc="a.category_id.name or '-'"/></td>
+                                        <td t-att-style="td"><span t-esc="' / '.join(x for x in [a.brand, a.model_no] if x) or '-'"/></td>
+                                        <td t-att-style="td"><span t-esc="a.serial_no or '-'"/></td>
+                                        <td t-att-style="td + 'text-align:right;'">
+                                            <span t-esc="'%g' % a.quantity"/> <span t-esc="a.uom_id.name or ''"/>
+                                        </td>
+                                        <td t-att-style="td"><span t-field="a.condition"/></td>
+                                        <td t-att-style="td">
+                                            <span t-if="a.purchase_date" t-field="a.purchase_date"/>
+                                            <span t-else="">-</span>
+                                        </td>
+                                        <td t-att-style="td + 'text-align:right;'">
+                                            <span t-if="a.value" t-esc="a.value" t-options="money"/>
+                                        </td>
+                                        <td t-att-style="td">
+                                            <span t-esc="', '.join(a.responsible_ids.mapped('name')) or '-'"/>
+                                        </td>
+                                    </tr>
+                                    <tr style="font-weight:bold;background:#f0ecef;">
+                                        <td colspan="5" style="padding:6px;border:1px solid #eee;text-align:right;">Total</td>
+                                        <td style="padding:6px;border:1px solid #eee;text-align:right;">
+                                            <span t-esc="'%g' % sum(o.asset_ids.mapped('quantity'))"/>
+                                        </td>
+                                        <td colspan="2" style="border:1px solid #eee;"/>
+                                        <td style="padding:6px;border:1px solid #eee;text-align:right;">
+                                            <span t-esc="sum(o.asset_ids.mapped('value'))" t-options="money"/>
+                                        </td>
+                                        <td style="border:1px solid #eee;"/>
+                                    </tr>
+                                </t>
+                                <tr t-else="">
+                                    <td colspan="10" style="padding:6px;border:1px solid #eee;text-align:center;color:#888;">
+                                        No assets registered for this property.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ============ CUSTODY HISTORY ============ -->
+                        <t t-if="history">
+                            <div t-att-style="sec">Custody History</div>
+                            <table style="width:100%;border-collapse:collapse;">
+                                <tr style="background:#714B67;color:#fff;">
+                                    <th t-att-style="th">Asset</th>
+                                    <th t-att-style="th">Responsible</th>
+                                    <th t-att-style="th">Reference</th>
+                                    <th t-att-style="th">From</th>
+                                    <th t-att-style="th">Until</th>
+                                    <th t-att-style="th">Condition In</th>
+                                    <th t-att-style="th">Condition Out</th>
+                                </tr>
+                                <tr t-foreach="history" t-as="h"
+                                    t-att-style="'' if h.date_to else 'font-weight:bold;'">
+                                    <td t-att-style="td"><span t-esc="h.asset_id.name"/></td>
+                                    <td t-att-style="td"><span t-esc="h.partner_id.name"/></td>
+                                    <td t-att-style="td"><span t-esc="h.occupy_id.occupy_seq or h.tenancy_id.tenancy_seq or '-'"/></td>
+                                    <td t-att-style="td"><span t-field="h.date_from"/></td>
+                                    <td t-att-style="td">
+                                        <span t-if="h.date_to" t-field="h.date_to"/>
+                                        <span t-else="">Current</span>
+                                    </td>
+                                    <td t-att-style="td"><span t-esc="h.condition_in or '-'"/></td>
+                                    <td t-att-style="td"><span t-esc="h.condition_out or '-'"/></td>
+                                </tr>
+                            </table>
+                        </t>
+
+                        <div style="margin-top:10px;color:#666;font-size:10px;">
+                            Printed on <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M')"/>
+                        </div>
+
+                        <table style="width:100%;margin-top:50px;text-align:center;page-break-inside:avoid;">
+                            <tr>
+                                <td>_________________________</td>
+                                <td>_________________________</td>
+                            </tr>
+                            <tr>
+                                <td>Handed Over By</td>
+                                <td>Received By (Occupant / Tenant)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_property_asset_summary" model="ir.actions.report">
+        <field name="name">Asset Report</field>
+        <field name="model">property.asset.report.wizard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">rental_management.report_property_asset_summary</field>
+        <field name="report_file">rental_management.report_property_asset_summary</field>
+        <field name="print_report_name">'Asset Report - %s' % (object.subproject_id.name or
+            object.property_project_id.name or 'All')
+        </field>
+    </record>
+
+    <template id="report_property_asset_summary">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <t t-set="data" t-value="o._get_report_data()"/>
+                    <t t-set="money" t-value="{'widget': 'monetary', 'display_currency': res_company.currency_id}"/>
+                    <t t-set="th" t-value="'padding:5px;border:1px solid #714B67;'"/>
+                    <t t-set="td" t-value="'padding:4px;border:1px solid #eee;'"/>
+                    <t t-set="tot" t-value="'padding:5px;border:1px solid #eee;font-weight:bold;background:#f0ecef;'"/>
+                    <div class="page" style="font-family:Arial,sans-serif;font-size:11px;color:#222;">
+
+                        <div style="text-align:center;background:#714B67;color:#fff;padding:12px;border-radius:6px;margin-bottom:8px;">
+                            <h2 style="margin:0;color:#fff;">Asset Report</h2>
+                            <div style="font-size:11.5px;">
+                                <span t-esc="data['filter_label']"/>
+                            </div>
+                        </div>
+                        <div style="text-align:right;color:#666;margin-bottom:10px;">
+                            Printed on
+                            <span t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M')"/>
+                            ·
+                            <span t-esc="data['unit_count']"/>
+                            unit(s) ·
+                            <span t-esc="data['count']"/>
+                            asset line(s)
+                        </div>
+
+                        <!-- ============ PER BUILDING ============ -->
+                        <t t-foreach="data['groups']" t-as="grp">
+                            <div style="margin-top:14px;margin-bottom:4px;font-weight:bold;font-size:12.5px;color:#714B67;">
+                                <span t-esc="grp['compound']"/>
+                                /
+                                <span t-esc="grp['building']"/>
+                            </div>
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                    <tr style="background:#714B67;color:#fff;">
+                                        <th t-att-style="th">#</th>
+                                        <th t-att-style="th">Asset</th>
+                                        <th t-att-style="th">Category</th>
+                                        <th t-att-style="th">Brand / Model</th>
+                                        <th t-att-style="th">Serial / Tag</th>
+                                        <th t-att-style="th">Qty</th>
+                                        <th t-att-style="th">Condition</th>
+                                        <th t-att-style="th">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="grp['units']" t-as="unit">
+                                        <tr style="background:#faf8fa;">
+                                            <td colspan="8"
+                                                style="padding:4px 6px;border:1px solid #eee;font-weight:bold;">
+                                                Unit
+                                                <span t-esc="unit['label']"/>
+                                                <span style="font-weight:normal;color:#666;">
+                                                    · Floor
+                                                    <span t-esc="unit['property'].floor"/>
+                                                    <t t-if="unit['property'].property_subtype_id">·
+                                                        <span t-esc="unit['property'].property_subtype_id.name"/>
+                                                    </t>
+                                                    <t t-if="unit['property'].asset_template_id">· Template:
+                                                        <span t-esc="unit['property'].asset_template_id.name"/>
+                                                    </t>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <t t-if="unit['assets']">
+                                            <tr t-foreach="unit['assets']" t-as="a">
+                                                <td t-att-style="td">
+                                                    <span t-esc="a_index + 1"/>
+                                                </td>
+                                                <td t-att-style="td">
+                                                    <span t-esc="a.name"/>
+                                                </td>
+                                                <td t-att-style="td">
+                                                    <span t-esc="a.category_id.name or '-'"/>
+                                                </td>
+                                                <td t-att-style="td">
+                                                    <span t-esc="' / '.join(x for x in [a.brand, a.model_no] if x) or '-'"/>
+                                                </td>
+                                                <td t-att-style="td">
+                                                    <span t-esc="a.serial_no or '-'"/>
+                                                </td>
+                                                <td t-att-style="td + 'text-align:right;'">
+                                                    <span t-esc="'%g' % a.quantity"/>
+                                                    <span t-esc="a.uom_id.name or ''"/>
+                                                </td>
+                                                <td t-att-style="td + ('color:#c0392b;font-weight:bold;' if a.condition in ('damaged', 'missing') else '')">
+                                                    <span t-field="a.condition"/>
+                                                </td>
+                                                <td t-att-style="td + 'text-align:right;'">
+                                                    <span t-if="a.value" t-esc="a.value" t-options="money"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr t-else="">
+                                            <td colspan="8"
+                                                style="padding:4px;border:1px solid #eee;text-align:center;color:#888;font-style:italic;">
+                                                No assets registered for this unit.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <tr>
+                                        <td colspan="5" t-att-style="tot + 'text-align:right;'">
+                                            Total
+                                            <span t-esc="grp['building']"/>
+                                            (
+                                            <span t-esc="len(grp['units'])"/>
+                                            units,
+                                            <span t-esc="grp['count']"/>
+                                            lines
+                                            <t t-if="grp['problem']">,
+                                                <span style="color:#c0392b;">
+                                                    <span t-esc="grp['problem']"/>
+                                                    damaged/missing
+                                                </span>
+                                            </t>
+                                            )
+                                        </td>
+                                        <td t-att-style="tot + 'text-align:right;'">
+                                            <span t-esc="'%g' % grp['qty']"/>
+                                        </td>
+                                        <td t-att-style="tot"/>
+                                        <td t-att-style="tot + 'text-align:right;'">
+                                            <span t-esc="grp['value']" t-options="money"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <!-- ============ GRAND TOTAL ============ -->
+                        <table t-if="len(data['groups']) &gt; 1"
+                               style="width:100%;border-collapse:collapse;margin-top:12px;">
+                            <tr>
+                                <td t-att-style="tot + 'width:62%;text-align:right;color:#714B67;'">
+                                    Grand Total (
+                                    <span t-esc="data['unit_count']"/>
+                                    units,
+                                    <span t-esc="data['count']"/>
+                                    lines)
+                                </td>
+                                <td t-att-style="tot + 'text-align:right;'">
+                                    <span t-esc="'%g' % data['qty']"/>
+                                </td>
+                                <td t-att-style="tot + 'text-align:right;color:#714B67;'">
+                                    <span t-esc="data['value']" t-options="money"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ============ TOTALS BY ITEM ============ -->
+                        <t t-if="data['items']">
+                            <div style="page-break-inside:avoid;">
+                                <div style="margin-top:18px;margin-bottom:4px;font-weight:bold;font-size:12.5px;color:#714B67;">
+                                    Totals by Asset
+                                </div>
+                                <table style="width:100%;border-collapse:collapse;">
+                                    <tr style="background:#714B67;color:#fff;">
+                                        <th t-att-style="th">Category</th>
+                                        <th t-att-style="th">Asset</th>
+                                        <th t-att-style="th">No. of Units</th>
+                                        <th t-att-style="th">Total Qty</th>
+                                        <th t-att-style="th">Damaged / Missing</th>
+                                        <th t-att-style="th">Value</th>
+                                    </tr>
+                                    <tr t-foreach="data['items']" t-as="item">
+                                        <td t-att-style="td">
+                                            <span t-esc="item['category'] or '-'"/>
+                                        </td>
+                                        <td t-att-style="td">
+                                            <span t-esc="item['name']"/>
+                                        </td>
+                                        <td t-att-style="td + 'text-align:right;'">
+                                            <span t-esc="item['units']"/>
+                                        </td>
+                                        <td t-att-style="td + 'text-align:right;'">
+                                            <span t-esc="'%g' % item['qty']"/>
+                                            <span t-esc="item['uom']"/>
+                                        </td>
+                                        <td t-att-style="td + 'text-align:right;' + ('color:#c0392b;font-weight:bold;' if item['problem'] else '')">
+                                            <span t-esc="'%g' % item['problem']"/>
+                                        </td>
+                                        <td t-att-style="td + 'text-align:right;'">
+                                            <span t-esc="item['value']" t-options="money"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>

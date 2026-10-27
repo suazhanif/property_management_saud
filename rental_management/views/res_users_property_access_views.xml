@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_property_access_type" model="ir.ui.view">
+        <field name="name">res.users.form.property.access.type</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Real Estate" name="real_estate_access"
+                      groups="rental_management.property_rental_manager">
+                    <group>
+                        <group>
+                            <field name="property_access_type" placeholder="All types (no restriction)"/>
+                        </group>
+                        <group>
+                            <div class="text-muted" colspan="2">
+                                When set, this user only sees compounds, buildings and properties
+                                of the selected type. Employee Family / Bachelor users see the
+                                status "On Rent" as "Occupied".
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
